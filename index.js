@@ -45,14 +45,14 @@ app.get("/",(req, res) => {
     res.send(JSON.stringify({microService:"Idk"}))
 })
 
-droneLiveConnection.init();
-deviceRegistrationHandler.init();
-droneFrontendConnection.init();
+
 
 app.listen(3000, () => {
     console.log(`Rest Service app listening at http://localhost:3000`);
 });
-
+droneLiveConnection.init();
+deviceRegistrationHandler.init();
+droneFrontendConnection.init();
 
 /*
 //TODO @deprecated
