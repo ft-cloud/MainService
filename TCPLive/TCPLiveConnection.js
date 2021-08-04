@@ -1,6 +1,6 @@
 const Net = require('net');
 const port = 8856;
-var session = require('../session');
+var session = require('sessionLib/session');
 var account = require('../account');
 var device = require('../device');
 var liveDroneClients = require("../FrontendConnection/droneFrontendConnection").liveDroneClientConnections;

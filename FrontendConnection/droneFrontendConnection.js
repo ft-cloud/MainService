@@ -1,4 +1,4 @@
-var session = require('../session');
+var session = require('sessionLib/session');
 var account = require('../account');
 var device = require('../device');
 const liveConnection = require("../TCPLive/TCPLiveConnection");

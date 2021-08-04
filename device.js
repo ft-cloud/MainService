@@ -46,10 +46,10 @@ var device = {
                          AND device = ?`;
 
             global.connection.query(sql, [useruuid, deviceuuid], function (err, result) {
-                admin.isUserAdmin(useruuid).then((isAdmin) => {
-                    resolve((result && result[0]) || isAdmin);
+                fetch("http://account:3000/api/v1/account/isUserAdmin?uuid="+useruuid).then(result => result.json().then(parsed => {
+                    resolve((result && result[0]) || parsed.isAdmin);
 
-                });
+                }));
 
             });
 

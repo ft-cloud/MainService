@@ -1,6 +1,6 @@
 const uuid = require('uuid');
 const hashingSecret = "LEDWAll";
-const session = require('./session');
+const session = require('sessionLib/session');
 
 
 var account = {

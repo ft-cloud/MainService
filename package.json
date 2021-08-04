@@ -16,6 +16,7 @@
     "express-ws": "^5.0.2",
     "https": "^1.0.0",
     "mysql": "^2.18.1",
+    "sessionlib": "github:ft-cloud/sessionLib",
     "uuid": "^8.3.2"
   }
 }
