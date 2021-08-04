@@ -1,5 +1,6 @@
 var uuid = require('uuid');
 const admin = require("./account");
+const axios = require('axios');
 
 var device = {
 
@@ -46,7 +47,7 @@ var device = {
                          AND device = ?`;
 
             global.connection.query(sql, [useruuid, deviceuuid], function (err, result) {
-                fetch("http://account:3000/api/v1/account/isUserAdmin?uuid="+useruuid).then(result => result.json()).then(parsed => {
+                axios("http://account:3000/api/v1/account/isUserAdmin?uuid="+useruuid).then(parsed => {
                     resolve((result && result[0]) || parsed.isAdmin);
 
                 });
