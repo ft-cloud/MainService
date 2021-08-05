@@ -1,6 +1,6 @@
 const {app} = require("./index.js");
 const session = require("sessionlib/session");
-const device = require("./device");
+const device = require("./deviceReg");
 const registrationCodes = [];
 module.exports.init = function() {
 

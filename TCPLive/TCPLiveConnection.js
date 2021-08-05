@@ -1,8 +1,8 @@
 const Net = require('net');
 const port = 8856;
 var session = require('sessionlib/session');
-var account = require('../account');
-var device = require('../device');
+var device = require('../deviceReg');
+const axios = require('axios');
 var liveDroneClients = require("../FrontendConnection/droneFrontendConnection").liveDroneClientConnections;
 const liveDevices = [];
 
@@ -267,20 +267,17 @@ function checkCommand(actionString, socket, mainCallback) {
             break;
         case 'username':
             if (socket.auth) {
-                session.getUserUUID(socket.auth, (result) => {
-                    if (result !== undefined) {
-                        account.getAccountByUUID(result).then((callback) => {
-                            if (socket.json) {
-                                socket.write(`{"result":"${callback.name}"}\n`);
-                            } else {
-                                socket.write("ft+username=" + callback.name + "\n");
-                            }
-                            mainCallback();
-                        });
+
+
+                axios("http://account:3000/api/v1/account/info?session="+socket.auth).then(response => {
+                    if (socket.json) {
+                        socket.write(`{"result":"${response.name}"}\n`);
                     } else {
-                        mainCallback();
+                        socket.write("ft+username=" + response.name + "\n");
                     }
+                    mainCallback();
                 });
+
 
             } else {
                 sendSocketAuthError(socket);

@@ -1,5 +1,5 @@
 var session = require('sessionlib/session');
-var device = require('../device');
+var device = require('../deviceReg');
 const liveConnection = require("../TCPLive/TCPLiveConnection");
 const {app} = require("../index");
 
