@@ -41,7 +41,7 @@ const limiter = rateLimit({
 
 
 
-app.get("/",(req, res) => {
+app.get("/api/:v/:server",(req, res) => {
     res.send(JSON.stringify({microService:"Idk"}))
 })
 
