@@ -152,16 +152,19 @@ function spreadPosToDroneClients(device, lat, long, alt, ConStats, height) {
     console.log(device);
     if (liveDroneClients[device] !== undefined) {
         liveDroneClients[device].forEach(client => {
-            if(client.open) {
-                client.send(JSON.stringify({
-                    type: "clientPos",
-                    lat: lat,
-                    long: long,
-                    alt: alt,
-                    ConnectedSatellites: ConStats,
-                    height: height
-                }));
-            }
+                try {
+                    client.send(JSON.stringify({
+                        type: "clientPos",
+                        lat: lat,
+                        long: long,
+                        alt: alt,
+                        ConnectedSatellites: ConStats,
+                        height: height
+                    }));
+                }catch (e) {
+
+                }
+
         });
     }
 
@@ -171,12 +174,14 @@ function spreadBatteryVoltageToDroneClients(device, voltage, percentage) {
 
     if (liveDroneClients[device] !== undefined) {
         liveDroneClients[device].forEach(client => {
-            if(client.open) {
+            try {
                 client.send(JSON.stringify({
                     type: "voltage",
                     voltage: voltage,
                     percentage: percentage
                 }));
+            }catch (e) {
+
             }
         });
     }
@@ -186,12 +191,14 @@ function spreadFlightModeToDroneClients(device, flightMode, emergencyMode) {
 
     if (liveDroneClients[device] !== undefined) {
         liveDroneClients[device].forEach(client => {
-            if(client.open) {
+            try {
                 client.send(JSON.stringify({
                     type: "flightMode",
                     flightMode: flightMode,
                     emergencyMode: emergencyMode
                 }));
+            }catch (e) {
+
             }
         });
     }
