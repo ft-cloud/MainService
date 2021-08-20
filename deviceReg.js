@@ -42,7 +42,7 @@ var deviceReg = {
 
             global.connection.query(sql, [useruuid, deviceuuid], function (err, result) {
                 axios("http://account:3000/api/v1/account/isUserAdmin?uuid="+useruuid).then(parsed => {
-                    resolve((result && result[0]) || parsed.isAdmin);
+                    resolve((result && result[0]) || parsed.data.isAdmin);
 
                 });
 
