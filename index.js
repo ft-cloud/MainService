@@ -15,7 +15,7 @@ const deviceRegistrationHandler = require('./deviceRegistrationHandler')
 global.connection = mysql.createConnection({
     host: 'database',
     user: 'root',
-    password: 'LEDWall$246#',
+    password: process.env.MYSQL_ROOT_PASSWORD,
     database: "cloud"
 });
 
