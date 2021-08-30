@@ -16,7 +16,8 @@ global.connection = mysql.createConnection({
     host: 'database',
     user: 'root',
     password: process.env.MYSQL_ROOT_PASSWORD,
-    database: "cloud"
+    database: "cloud",
+    connectTimeout: 5000
 });
 
 app.use(express.json());
