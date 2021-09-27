@@ -17,6 +17,7 @@
     "express-rate-limit": "^5.3.0",
     "express-ws": "^5.0.2",
     "https": "^1.0.0",
+    "mongodb": "^4.1.2",
     "mysql": "^2.18.1",
     "sessionlib": "github:ft-cloud/sessionLib",
     "uuid": "^8.3.2"

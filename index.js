@@ -3,6 +3,14 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
+const { MongoClient } = require("mongodb");
+const uri = `mongodb://root:${process.env.MYSQL_ROOT_PASSWORD}@mongo:27017/?authSource=admin&readPreference=primary&directConnection=true&ssl=false`
+const client = new MongoClient(uri);
+
+client.connect().then(()=> {
+    global.database = client.db("cloud");
+
+})
 
 module.exports.app = app;
 
