@@ -5,27 +5,26 @@ var deviceReg = {
 
     createDeviceEntry: function (deviceUUID, name, callback) {
         if (!deviceUUID) callback(undefined);
+        const deviceData = global.database.collection("deviceData");
         const uuidGen = uuid.v4();
-        var sql = `INSERT INTO deviceData (uuid, name, config, deviceUUID)
-                   VALUES (?, ?, '{}', ?)`;
-
-        global.connection.query(sql, [uuidGen, name, deviceUUID], function (err, result) {
-            if (err) throw err;
-
+        deviceData.insertOne(
+            {
+                uuid:uuidGen,
+                name: name,
+                config: {},
+                deviceUUID: deviceUUID
+            }
+        ).then(()=>{
             callback(uuidGen);
-        });
-
+        })
 
     },
 
 
     storeUserDevices: function (userDeviceUUID, userUUID, deviceUUID, callback) {
         if (!userDeviceUUID) callback(undefined);
-        var sql_addDevicePermission = `INSERT INTO userDeviceAccess (user, device, deviceType)
-                                       VALUES (?, ?, ?)`;
-
-        global.connection.query(sql_addDevicePermission, [userUUID, userDeviceUUID, deviceUUID], function (err, result) {
-            if (err) throw err;
+        const account = global.database.collection("account");
+        account.updateOne({uuid: userUUID},{$push: {devices: userDeviceUUID}}).then(()=>{
             callback();
         });
 
@@ -35,19 +34,18 @@ var deviceReg = {
         //TODO auslagern
     checkUserDeviceAccessPermission: function (useruuid, deviceuuid) {
         return new Promise(function (resolve, reject) {
-            var sql = `SELECT *
-                       FROM userDeviceAccess
-                       WHERE user = ?
-                         AND device = ?`;
+            const account = global.database.collection("account");
+            account.findOne({uuid:useruuid}).then(res=>{
 
-            global.connection.query(sql, [useruuid, deviceuuid], function (err, result) {
-                axios("http://account:3000/api/v1/account/isUserAdmin?uuid="+useruuid).then(parsed => {
-                    resolve((result && result[0]) || parsed.data.isAdmin);
+                if(res!=null&&res.devices!=null&&res.devices.indexOf(deviceuuid)!==-1){
+                    resolve(true);
+                }else{
+                    axios("http://account:3000/api/v1/account/isUserAdmin?uuid="+useruuid).then(parsed => {
+                        resolve(parsed.data.isAdmin);
+                    });
+                }
 
-                });
-
-            });
-
+            })
         });
 
     },
@@ -73,16 +71,10 @@ var deviceReg = {
     //TODO auslagern
     setOnlineState: function (state, deviceuuid, callback) {
 
-        var sql = `UPDATE deviceData
-                   SET online = ?
-                   WHERE uuid = ?`;
-        global.connection.query(sql, [state, deviceuuid], function (err, result) {
-
+        const deviceData = global.database.collection("deviceData");
+        deviceData.updateOne({uuid:deviceuuid},{$set:{online:state}}).then(()=>{
             callback();
-
-
-        });
-
+        })
 
     },
 
@@ -90,25 +82,16 @@ var deviceReg = {
     updateStatusInfo: function (device, key, value, callback) {
 
 
-        var sql = `SELECT statusInfo
-                   FROM deviceData
-                   WHERE (uuid = ?)`;
-        global.connection.query(sql, [device], function (err, result) {
-            var statusInfoJson = JSON.parse(result[0].statusInfo);
-            console.log(value);
-            statusInfoJson[String(key)] = String(value);
-            var setSQL = `UPDATE deviceData
-                          SET statusInfo = ?
-                          WHERE uuid = ?`;
-            global.connection.query(setSQL, [JSON.stringify(statusInfoJson), device], function (err, SETresult) {
-                console.log(SETresult);
-                callback();
-
-
-            });
-
-
-        });
+        const deviceData = global.database.collection("deviceData");
+        deviceData.findOne({uuid:device}).then(deviceResult=>{
+            if(deviceResult!=null&&deviceResult.statusInfo!=null) {
+                const deviceStatusInfo = deviceResult.statusInfo;
+                deviceStatusInfo[key] = value;
+                deviceData.updateOne({uuid:device},{$set:{statusInfo:deviceStatusInfo}}).then(()=>{
+                    callback();
+                })
+            }
+        })
 
     }
 
