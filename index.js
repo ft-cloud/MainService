@@ -26,7 +26,6 @@ app.use(express.urlencoded({extended: true}));
 
 
 
-global.connection.connect();
 
 
 

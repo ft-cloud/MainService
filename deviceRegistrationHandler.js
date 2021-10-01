@@ -39,7 +39,7 @@ module.exports.init = function() {
     app.get('/api/v1/regDevice/waitForRegistration', (req, res) => {
 
 
-        if (req.query.regCode && req.query.deviceUUID && req.query.deviceName) {
+        if (req.query.regCode!=null && req.query.deviceUUID!=null && req.query.deviceName!=null) {
 
             if (registrationCodes.includes(Number.parseInt(req.query.regCode))) {
                 var objTest = {
@@ -67,7 +67,7 @@ module.exports.init = function() {
 
     app.get('/api/v1/regDevice/registerByCode', (req, res) => {
 
-        if (req.query.regCode && req.query.session) {
+        if (req.query.regCode!=null && req.query.session!=null) {
 
 
             session.validateSession(req.query.session.toString(), (isValid) => {
