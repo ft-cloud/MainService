@@ -1,4 +1,3 @@
-const mysql = require('mysql');
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -20,13 +19,7 @@ const deviceRegistrationHandler = require('./deviceRegistrationHandler')
 
 
 
-global.connection = mysql.createConnection({
-    host: 'database',
-    user: 'root',
-    password: process.env.MYSQL_ROOT_PASSWORD,
-    database: "cloud",
-    connectTimeout: 5000
-});
+
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
