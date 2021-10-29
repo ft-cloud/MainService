@@ -102,7 +102,6 @@ module.exports.init = function () {
 
     });
 
-
     app.post('/api/v2/regDevice/registerByCode', (req, res) => {
         if (req.body.regCode != null && req.body.deviceName != null) {
             if (req.body.deviceName.toString().length < 4 && req.body.deviceName.toString().length > 49) {
@@ -122,9 +121,12 @@ module.exports.init = function () {
                 if (uuid != null) {
                     device.checkDeviceRegistrationExists(registrationCode).then((result) => {
                         if (result) {
+
                             device.updateRegisteredDevice(registrationCode, req.body.deviceName.toString(), uuid).then((newUUID) => {
+
                                 device.storeUserDevices(newUUID, uuid).then(() => {
-                                    res.status(200).json({newUUID: newUUID});
+
+                                    res.status(200).json({uuid: newUUID});
 
                                 });
 
