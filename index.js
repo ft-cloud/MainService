@@ -8,6 +8,10 @@ const client = new MongoClient(uri);
 
 client.connect().then(()=> {
     global.database = client.db("cloud");
+    global.database.collection("deviceData").createIndex( { "registrationTimeout": 1 }, { expireAfterSeconds: 1200 } )
+
+
+
 
 })
 
@@ -33,6 +37,7 @@ app.use(express.urlencoded({extended: true}));
 app.use(cors());
 
 const rateLimit = require("express-rate-limit");
+const device = require("./deviceReg");
 
 const limiter = rateLimit({
     windowMs: 10 * 1000, // 15 minutes
@@ -43,7 +48,7 @@ const limiter = rateLimit({
 
 
 app.get("/api/v1/regDevice",(req, res) => {
-    res.send(JSON.stringify({microService:"Idk"}))
+    res.send(JSON.stringify({microService:"LiveService"}))
 })
 
 
@@ -153,6 +158,7 @@ app.use(function (err,req,res,next){
     if (res.headersSent) {
         return next(err);
     }
+    console.error(err)
     res.status(500);
     res.send('Something went wrong')
 })

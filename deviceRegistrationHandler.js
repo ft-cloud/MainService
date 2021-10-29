@@ -1,143 +1,153 @@
 const {app} = require("./index.js");
 const session = require("sessionlib/session");
 const device = require("./deviceReg");
-const registrationCodes = [];
-module.exports.init = function() {
-
-    app.get('/api/v1/regDevice/getRegistrationCode', (req, res) => {
-
-        var regCode;
-        var counter = 0;
-        while (counter < 200) {
-            const random = Math.floor(Math.random() * 16383); //Because this is in bin 14 length
-            if (!registrationCodes.includes(random)) {
-                regCode = random;
-                console.log("Reg Code is: " + regCode);
-                registrationCodes.push(regCode);
-                break;
-            }
-            counter++;
-
-        }
-        if (counter > 199) {
-            res.send("something went wrong (No Registration Keys available)");
 
 
-        }
-        const tempOBJ = {
-            token: regCode
-
-        };
-
-        res.send(JSON.stringify(tempOBJ));
-
-    });
+module.exports.init = function () {
 
 
-    const waitForRegistrationDevices = [];
+    app.post('/api/v2/regDevice/initRegistration', (req, res) => {
+        if (req.body.deviceUUID != null) {
 
-    app.get('/api/v1/regDevice/waitForRegistration', (req, res) => {
+            device.checkDeviceTypeExists(req.body.deviceUUID).then(existsType=>{
+                if(existsType) {
+                    device.generateRegistrationCode().then(randomRegCode => {
+                        device.createPreDeviceEntry(req.body.deviceUUID, randomRegCode).then(() => {
+                            res.status(200).json({regCode: randomRegCode});
+                        });
+                    });
+                }else{
+                    res.status(400).json({error: "No valid inputs!", errorcode: "002"});
 
+                }
+            })
 
-        if (req.query.regCode!=null && req.query.deviceUUID!=null && req.query.deviceName!=null) {
-
-            if (registrationCodes.includes(Number.parseInt(req.query.regCode))) {
-                var objTest = {
-                    uuid: req.query.deviceUUID.toString(),
-                    res: res,
-                    name: req.query.deviceName
-                };
-
-
-                waitForRegistrationDevices[req.query.regCode.toString()] = objTest;
-
-            } else {
-                res.send('{\"error\":\"No valid registration code!\",\"errorcode\":\"010\"}');
-
-
-            }
 
         } else {
-
-            res.send('{\"error\":\"No valid inputs!\",\"errorcode\":\"002\"}');
+            res.status(400).json({error: "No valid inputs!", errorcode: "002"});
         }
-
     });
 
 
-    app.get('/api/v1/regDevice/registerByCode', (req, res) => {
+    //TODO Implement with function to register for the device
+    //app.get('/api/v2/regDevice/getUserOneTimeDeviceRegistrationCode',(req,res)=>{
+       // session.transformSecurelySessionToUserUUID(req,res).then(res=>{
 
-        if (req.query.regCode!=null && req.query.session!=null) {
-
-
-            session.validateSession(req.query.session.toString(), (isValid) => {
-                if (isValid) {
-                    session.reactivateSession(req.query.session);
-                    session.getUserUUID(req.query.session.toString(), (uuid) => {
-                        if (uuid) {
-
-                            if (registrationCodes.includes(Number.parseInt(req.query.regCode))) {
-                                if(waitForRegistrationDevices[req.query.regCode.toString()] === undefined) {
-
-                                    const indexOfCode = registrationCodes.indexOf(Number.parseInt(req.query.regCode));
-                                    if (indexOfCode > -1) registrationCodes.splice(indexOfCode, 1);
-
-                                    const indexOfRequest = waitForRegistrationDevices.indexOf(waitForRegistrationDevices[req.query.regCode.toString()]);
-                                    if (indexOfRequest > -1) registrationCodes.splice(indexOfRequest, 1);
-                                    res.send('{\"error\":\"No Device is waiting for this registration!\",\"errorcode\":\"010\"}');
-
-                                    return;
-
-                                }
-
-                                //Create Devices in Database
-                                device.createDeviceEntry(waitForRegistrationDevices[req.query.regCode.toString()].uuid.toString(), waitForRegistrationDevices[req.query.regCode.toString()].name.toString(), (AddUuid) => {
-
-                                    session.generateAPIKey(uuid, AddUuid, (apiKey) => {
-
-                                        waitForRegistrationDevices[req.query.regCode.toString()].res.send(`{"success":"true","APIKey":"${apiKey}","deviceuuid":"${AddUuid}"}`);
-
-                                        //Store User Device
-                                        device.storeUserDevices(AddUuid, uuid, waitForRegistrationDevices[req.query.regCode.toString()].uuid.toString(), () => {
-
-                                            //Answer Request
-                                            res.send(`{"success":"Registration done","deviceType":"${waitForRegistrationDevices[req.query.regCode.toString()].uuid.toString()}","uuid":"${AddUuid}"}`);
+       // })
+   // })
 
 
-                                            //Remove Temp vars
-                                            const indexOfCode = registrationCodes.indexOf(Number.parseInt(req.query.regCode));
-                                            if (indexOfCode > -1) registrationCodes.splice(indexOfCode, 1);
+    app.ws('/api/v2/regDevice/registrationCallback', function (ws, req) {
+        if (req.query.regCode != null) {
+            let registrationCode;
+            try {
+                registrationCode = parseInt(req.query.regCode);
+            } catch (e) {
+                ws.close();
+                return;
+            }
 
-                                            const indexOfRequest = waitForRegistrationDevices.indexOf(waitForRegistrationDevices[req.query.regCode.toString()]);
-                                            if (indexOfRequest > -1) registrationCodes.splice(indexOfRequest, 1);
+            device.checkDeviceRegistrationExists(registrationCode).then(result => {
+                if (result) {
 
+                    ws.send(JSON.stringify({msg: "Device entry found. Waiting for registration"}));
+
+                    global.database.collection("deviceData").watch([], {fullDocument: "updateLookup"}).on("change", (changeEvent) => {
+
+                        if (changeEvent.operationType === 'delete') {
+                            ws.send(JSON.stringify({msg: "Registration was canceled", error: true}));
+                            ws.close();
+                            return;
+                        }
+
+                        if (changeEvent.fullDocument.regCode != null && changeEvent.fullDocument.regCode === registrationCode) {
+                            if (changeEvent.operationType === 'update') {
+
+                                if (changeEvent.fullDocument.uuid != null) {
+
+                                    device.getRegUser(registrationCode).then(userUUID => {
+
+
+                                    session.generateAPIKey(userUUID, changeEvent.fullDocument.uuid, (NewApiKey) => {
+
+                                        device.freeRegCode(registrationCode).then(() => {
+                                            ws.send(JSON.stringify({msg:"registration done",apiKey: NewApiKey}))
+                                            ws.close();
 
                                         });
 
-
                                     });
 
+                                    })
 
-                                });
+                                }
 
-                            } else {
-                                res.send('{\"error\":\"No valid registration code!\",\"errorcode\":\"010\"}');
                             }
 
-                        } else {
-                            res.send('{\"error\":\"No valid session!\",\"errorcode\":\"006\"}');
-
                         }
+
                     });
+
+
                 } else {
-                    res.send('{\"error\":\"No valid session!\",\"errorcode\":\"006\"}');
+                    ws.send(JSON.stringify({msg: "No device is available with this registration code", error: true}));
+                    ws.close();
+
                 }
             });
 
         } else {
-
-            res.send('{\"error\":\"No valid inputs!\",\"errorcode\":\"002\"}');
+            ws.close(11);
         }
 
     });
-}
+
+
+    app.post('/api/v2/regDevice/registerByCode', (req, res) => {
+        if (req.body.regCode != null && req.body.deviceName != null) {
+            if (req.body.deviceName.toString().length < 4 && req.body.deviceName.toString().length > 49) {
+                res.send(`{"success":false,"error":"String too long or too short"}`);
+                return;
+            }
+
+            let registrationCode;
+            try {
+                registrationCode = parseInt(req.body.regCode);
+            } catch (e) {
+                res.status(400).json({error: "No valid inputs!", errorcode: "002"});
+            }
+
+
+            session.transformSecurelySessionToUserUUID(res, req).then(uuid => {
+                if (uuid != null) {
+                    device.checkDeviceRegistrationExists(registrationCode).then((result) => {
+                        if (result) {
+                            device.updateRegisteredDevice(registrationCode, req.body.deviceName.toString(), uuid).then((newUUID) => {
+                                device.storeUserDevices(newUUID, uuid).then(() => {
+                                    res.status(200).json({newUUID: newUUID});
+
+                                });
+
+                            });
+                        } else {
+                            res.status(404).json({
+                                "error": "No Device is waiting for this registration!",
+                                "errorcode": "010"
+                            });
+                        }
+                    });
+                }
+
+            });
+
+
+        } else {
+            res.status(400).json({error: "No valid inputs!", errorcode: "002"});
+
+        }
+    });
+
+
+
+
+};
