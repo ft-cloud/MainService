@@ -13,5 +13,7 @@ EXPOSE 8856
 #For the TCP Server
 COPY . /src
 FROM node:17-alpine
+COPY --from=BUILD_IMAGE /src .
+
 
 CMD if [ "$mode" = "dev" ] ; then npm run debug ; else npm run start ; fi
