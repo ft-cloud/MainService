@@ -1,11 +1,15 @@
-var session = require('sessionlib/session');
-var device = require('../deviceReg');
-const liveConnection = require("../TCPLive/TCPLiveConnection");
-const {app} = require("../index");
+import {session} from "sessionlib/session.js";
 
-const droneLiveClients = [];
+import {deviceReg as device} from "../deviceReg.js";
 
-module.exports.init = function() {
+import {liveDevices as liveConnection} from "../TCPLive/TCPLiveConnection.js";
+
+import {app} from "../index.js";
+
+
+export const droneLiveClients = [];
+
+export function DroneLiveConnection() {
 
     app.ws('/api/v1/device/droneLiveConnection', function (ws, req) {
 
@@ -64,7 +68,6 @@ module.exports.init = function() {
 
 }
 
-module.exports.liveDroneClientConnections = droneLiveClients;
 
 function initWS(ws) {
     ws.on('close', function () {

@@ -1,10 +1,24 @@
-const express = require('express');
-const cors = require('cors');
-const app = express();
-const cookieParser = require('cookie-parser')
+import express from "express";
+
+import cors from "cors";
+
+import cookieParser from "cookie-parser";
+
+import {MongoClient} from "mongodb";
+
+import express_ws from "express-ws";
+
+import rateLimit from "express-rate-limit";
 
 
-const { MongoClient } = require("mongodb");
+import {initTCPLiveConnection} from "./TCPLive/TCPLiveConnection.js";
+
+import {initDeviceRegistration} from "./deviceRegistrationHandler.js";
+
+import {DroneLiveConnection} from "./FrontendConnection/droneFrontendConnection.js";
+
+export const app = express();
+
 const uri = `mongodb://root:${process.env.MYSQL_ROOT_PASSWORD}@mongo:27017/?authSource=admin&readPreference=primary&directConnection=true&ssl=false`
 const client = new MongoClient(uri);
 
@@ -17,15 +31,6 @@ client.connect().then(()=> {
 
 })
 
-module.exports.app = app;
-
-const droneLiveConnection = require('./TCPLive/TCPLiveConnection.js');
-const droneFrontendConnection = require('./FrontendConnection/droneFrontendConnection.js');
-const deviceRegistrationHandler = require('./deviceRegistrationHandler')
-
-
-
-
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -36,12 +41,8 @@ app.use(cookieParser())
 
 
 
- require('express-ws')(app);
+ express_ws(app);
 app.use(cors());
-
-const rateLimit = require("express-rate-limit");
-const device = require("./deviceReg");
-
 const limiter = rateLimit({
     windowMs: 10 * 1000, // 15 minutes
     max: 8 // limit each IP to 50 requests per windowMs
@@ -59,9 +60,9 @@ app.get("/api/v1/regDevice",(req, res) => {
 app.listen(3000, () => {
     console.log(`Rest Service app listening at http://localhost:3000`);
 });
-droneLiveConnection.init();
-deviceRegistrationHandler.init();
-droneFrontendConnection.init();
+initTCPLiveConnection();
+initDeviceRegistration();
+DroneLiveConnection();
 
 /*
 //TODO @deprecated

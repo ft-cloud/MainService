@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "LedWall Microservice",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
@@ -12,6 +13,8 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.21.1",
+    "base32-decode": "^1.0.0",
+    "base32-encode": "^2.0.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "express": "^4.17.1",
@@ -20,6 +23,7 @@
     "https": "^1.0.0",
     "mongodb": "^4.1.2",
     "mysql": "^2.18.1",
+    "qrcode": "^1.5.0",
     "sessionlib": "github:ft-cloud/sessionLib",
     "uuid": "^8.3.2"
   },

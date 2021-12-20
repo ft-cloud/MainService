@@ -1,10 +1,15 @@
-const Net = require('net');
+import Net from "net";
+
+import {session} from "sessionlib/session.js";
+
+import {deviceReg as device} from "../deviceReg.js";
+
+import axios from "axios";
+
+import {droneLiveClients as liveDroneClients} from "../FrontendConnection/droneFrontendConnection.js";
+
 const port = 8856;
-var session = require('sessionlib/session');
-var device = require('../deviceReg');
-const axios = require('axios');
-var liveDroneClients = require("../FrontendConnection/droneFrontendConnection").liveDroneClientConnections;
-const liveDevices = [];
+export const liveDevices = [];
 
 function doQueue(socket) {
 
@@ -17,7 +22,7 @@ function doQueue(socket) {
 
 }
 
-module.exports.init = function init() {
+export function initTCPLiveConnection() {
 
     const server = new Net.Server();
     server.listen(port, function () {
@@ -115,7 +120,7 @@ function sendSocketOK(socket) {
     }
 }
 
-function terminateConnection(socket) {
+export function terminateConnection(socket) {
     if (socket.auth) {
         device.getDeviceUUID(socket.auth, (deviceUUID) => {
             device.setOnlineState(0, deviceUUID, () => {
@@ -135,7 +140,7 @@ function terminateConnection(socket) {
     socket.destroy();
 }
 
-function deleteDevice(socket) {
+export function deleteDevice(socket) {
     if (socket.auth) {
         if (socket.json) {
             socket.write(`{"update":"devicedelete"}\n`);
@@ -398,6 +403,3 @@ function checkCommand(actionString, socket, mainCallback) {
 
 }
 
-module.exports.liveDevices = liveDevices;
-module.exports.terminateConnection = terminateConnection;
-module.exports.deleteDevice = deleteDevice;

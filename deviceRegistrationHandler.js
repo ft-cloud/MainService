@@ -1,9 +1,10 @@
-const {app} = require("./index.js");
-const session = require("sessionlib/session");
-const device = require("./deviceReg");
+import {app} from "./index.js";
 
+import {session} from "sessionlib/session.js";
 
-module.exports.init = function () {
+import {deviceReg} from "./deviceReg.js";
+
+export function initDeviceRegistration() {
 
 
     app.post('/api/v2/regDevice/initRegistration', (req, res) => {

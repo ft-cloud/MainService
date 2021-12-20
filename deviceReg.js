@@ -1,12 +1,13 @@
-var uuid = require('uuid');
-const axios = require('axios');
+import {v4 as uuidV4} from "uuid";
 
-var deviceReg = {
+import axios from "axios";
+
+export const deviceReg = {
 
     createDeviceEntry: function (deviceUUID, name, callback) {
         if (!deviceUUID) callback(undefined);
         const deviceData = global.database.collection("deviceData");
-        const uuidGen = uuid.v4();
+        const uuidGen = uuidV4();
         deviceData.insertOne(
             {
                 uuid: uuidGen,
@@ -34,7 +35,7 @@ var deviceReg = {
 
     updateRegisteredDevice(regCode, name, userUUID) {
         return new Promise(resolve => {
-            const uuidGen = uuid.v4();
+            const uuidGen = uuidV4();
             global.database.collection("deviceData").updateOne({regCode: regCode}, {
                 $set: {
                     uuid: uuidGen,
@@ -215,6 +216,5 @@ var deviceReg = {
 };
 
 
-module.exports = deviceReg;
 
 
