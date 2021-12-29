@@ -35,7 +35,7 @@ client.connect().then(()=> {
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser())
-
+app.disable('x-powered-by');
 
 
 
@@ -44,10 +44,10 @@ app.use(cookieParser())
  express_ws(app);
 app.use(cors());
 const limiter = rateLimit({
-    windowMs: 10 * 1000, // 15 minutes
-    max: 8 // limit each IP to 50 requests per windowMs
+    windowMs: 5 * 1000, // 15 minutes
+    max: 70 // limit each IP to 50 requests per windowMs
 });
-//app.use(limiter);  todo activate
+//app.use(limiter);
 
 
 
