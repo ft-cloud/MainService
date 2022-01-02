@@ -48,53 +48,58 @@ export function initDeviceRegistration() {
                 return;
             }
 
+
+
             deviceReg.checkDeviceRegistrationExists(registrationCode).then(result => {
-                if (result) {
+                deviceReg.setDeviceLiveDeviceListening(registrationCode,true).then(()=>{
+                    if (result) {
 
-                    ws.send(JSON.stringify({msg: "Device entry found. Waiting for registration"}));
+                        ws.send(JSON.stringify({msg: "Device entry found. Waiting for registration"}));
 
-                    global.database.collection("deviceData").watch([], {fullDocument: "updateLookup"}).on("change", (changeEvent) => {
+                        global.database.collection("deviceData").watch([], {fullDocument: "updateLookup"}).on("change", (changeEvent) => {
 
-                        if (changeEvent.operationType === 'delete') {
-                            ws.send(JSON.stringify({msg: "Registration was canceled", error: true}));
-                            ws.close();
-                            return;
-                        }
+                            if (changeEvent.operationType === 'delete') {
+                                ws.send(JSON.stringify({msg: "Registration was canceled", error: true}));
+                                ws.close();
+                                return;
+                            }
 
-                        if (changeEvent.fullDocument.regCode != null && changeEvent.fullDocument.regCode === registrationCode) {
-                            if (changeEvent.operationType === 'update') {
+                            if (changeEvent.fullDocument.regCode != null && changeEvent.fullDocument.regCode === registrationCode) {
+                                if (changeEvent.operationType === 'update') {
 
-                                if (changeEvent.fullDocument.uuid != null) {
+                                    if (changeEvent.fullDocument.uuid != null) {
 
-                                    deviceReg.getRegUser(registrationCode).then(userUUID => {
+                                        deviceReg.getRegUser(registrationCode).then(userUUID => {
 
 
-                                    session.generateAPIKey(userUUID, changeEvent.fullDocument.uuid, (NewApiKey) => {
+                                            session.generateAPIKey(userUUID, changeEvent.fullDocument.uuid, (NewApiKey) => {
 
-                                        deviceReg.freeRegCode(registrationCode).then(() => {
-                                            ws.send(JSON.stringify({msg:"registration done",apiKey: NewApiKey}))
-                                            ws.close();
+                                                deviceReg.freeRegCode(registrationCode).then(() => {
+                                                    ws.send(JSON.stringify({msg:"registration done",apiKey: NewApiKey}))
+                                                    ws.close();
 
-                                        });
+                                                });
 
-                                    });
+                                            });
 
-                                    })
+                                        })
+
+                                    }
 
                                 }
 
                             }
 
-                        }
-
-                    });
+                        });
 
 
-                } else {
-                    ws.send(JSON.stringify({msg: "No device is available with this registration code", error: true}));
-                    ws.close();
+                    } else {
+                        ws.send(JSON.stringify({msg: "No device is available with this registration code", error: true}));
+                        ws.close();
 
-                }
+                    }
+                })
+
             });
 
         } else {
@@ -123,18 +128,30 @@ export function initDeviceRegistration() {
                     deviceReg.checkDeviceRegistrationExists(registrationCode).then((result) => {
                         if (result) {
 
-                            deviceReg.updateRegisteredDevice(registrationCode, req.body.deviceName.toString(), uuid).then((newUUID) => {
+                            deviceReg.checkIfLiveDeviceIsWaiting(registrationCode).then(waitingDevice=>{
+                                if(waitingDevice) {
+                                    deviceReg.updateRegisteredDevice(registrationCode, req.body.deviceName.toString(), uuid).then((newUUID) => {
 
-                                deviceReg.storeUserDevices(newUUID, uuid).then(() => {
+                                        deviceReg.storeUserDevices(newUUID, uuid).then(() => {
 
-                                    res.status(200).json({uuid: newUUID});
+                                            res.status(200).json({uuid: newUUID});
 
-                                });
+                                        });
 
-                            });
+                                    });
+                                }else{
+                                    res.status(400).json({
+                                        "error": "No Device is waiting for this registration!",
+                                        "errorcode": "010"
+                                    });
+
+                                }
+                            })
+
                         } else {
-                            res.status(404).json({
-                                "error": "No Device is waiting for this registration!",
+
+                            res.status(400).json({
+                                "error": "Registration Code does not exist",
                                 "errorcode": "010"
                             });
                         }

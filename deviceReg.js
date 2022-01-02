@@ -57,9 +57,23 @@ export const deviceReg = {
                 {
                     deviceUUID: deviceUUID,
                     registrationTimeout: new Date(),
-                    regCode: regCode
+                    regCode: regCode,
+                    liveDeviceWaiting: false
                 }
             ).then(() => {
+                resolve();
+            });
+
+
+        }));
+    },
+
+    setDeviceLiveDeviceListening: function(regCode, isWaiting) {
+        return new Promise((resolve => {
+
+            const deviceData = global.database.collection("deviceData");
+            deviceData.updateOne({regCode:regCode},{$set:{liveDeviceWaiting:isWaiting}})
+                .then(() => {
                 resolve();
             });
 
@@ -81,6 +95,26 @@ export const deviceReg = {
 
         });
 
+
+    },
+
+    checkIfLiveDeviceIsWaiting(regCode) {
+
+        return new Promise(resolve => {
+
+
+            const deviceData = global.database.collection("deviceData");
+            deviceData.findOne({regCode: regCode}).then(preDeviceEntry => {
+
+                if(preDeviceEntry) {
+                    resolve(preDeviceEntry.liveDeviceWaiting);
+                } else {
+                    resolve(false);
+                }
+
+            });
+
+        });
 
     },
 
