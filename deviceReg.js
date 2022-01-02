@@ -89,7 +89,7 @@ export const deviceReg = {
             const deviceData = global.database.collection("deviceData");
             deviceData.findOne({regCode: regCode}).then(preDeviceEntry => {
 
-                resolve(preDeviceEntry != null);
+                resolve({success:preDeviceEntry != null,deviceType:preDeviceEntry!=null?preDeviceEntry.deviceUUID:null});
 
             });
 

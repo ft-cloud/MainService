@@ -52,7 +52,7 @@ export function initDeviceRegistration() {
 
             deviceReg.checkDeviceRegistrationExists(registrationCode).then(result => {
                 deviceReg.setDeviceLiveDeviceListening(registrationCode,true).then(()=>{
-                    if (result) {
+                    if (result.success) {
 
                         ws.send(JSON.stringify({msg: "Device entry found. Waiting for registration"}));
 
@@ -103,7 +103,7 @@ export function initDeviceRegistration() {
             });
 
         } else {
-            ws.close(11);
+            ws.close();
         }
 
     });
@@ -126,7 +126,7 @@ export function initDeviceRegistration() {
             session.transformSecurelySessionToUserUUID(res, req).then(uuid => {
                 if (uuid != null) {
                     deviceReg.checkDeviceRegistrationExists(registrationCode).then((result) => {
-                        if (result) {
+                        if (result.success) {
 
                             deviceReg.checkIfLiveDeviceIsWaiting(registrationCode).then(waitingDevice=>{
                                 if(waitingDevice) {
@@ -134,7 +134,7 @@ export function initDeviceRegistration() {
 
                                         deviceReg.storeUserDevices(newUUID, uuid).then(() => {
 
-                                            res.status(200).json({uuid: newUUID});
+                                            res.status(200).json({uuid: newUUID,deviceType:result.deviceType});
 
                                         });
 
