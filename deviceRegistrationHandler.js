@@ -10,10 +10,10 @@ export function initDeviceRegistration() {
     app.post('/api/v2/regDevice/initRegistration', (req, res) => {
         if (req.body.deviceUUID != null) {
 
-            device.checkDeviceTypeExists(req.body.deviceUUID).then(existsType=>{
+            deviceReg.checkDeviceTypeExists(req.body.deviceUUID).then(existsType=>{
                 if(existsType) {
-                    device.generateRegistrationCode().then(randomRegCode => {
-                        device.createPreDeviceEntry(req.body.deviceUUID, randomRegCode).then(() => {
+                    deviceReg.generateRegistrationCode().then(randomRegCode => {
+                        deviceReg.createPreDeviceEntry(req.body.deviceUUID, randomRegCode).then(() => {
                             res.status(200).json({regCode: randomRegCode});
                         });
                     });
@@ -48,7 +48,7 @@ export function initDeviceRegistration() {
                 return;
             }
 
-            device.checkDeviceRegistrationExists(registrationCode).then(result => {
+            deviceReg.checkDeviceRegistrationExists(registrationCode).then(result => {
                 if (result) {
 
                     ws.send(JSON.stringify({msg: "Device entry found. Waiting for registration"}));
@@ -66,12 +66,12 @@ export function initDeviceRegistration() {
 
                                 if (changeEvent.fullDocument.uuid != null) {
 
-                                    device.getRegUser(registrationCode).then(userUUID => {
+                                    deviceReg.getRegUser(registrationCode).then(userUUID => {
 
 
                                     session.generateAPIKey(userUUID, changeEvent.fullDocument.uuid, (NewApiKey) => {
 
-                                        device.freeRegCode(registrationCode).then(() => {
+                                        deviceReg.freeRegCode(registrationCode).then(() => {
                                             ws.send(JSON.stringify({msg:"registration done",apiKey: NewApiKey}))
                                             ws.close();
 
@@ -120,12 +120,12 @@ export function initDeviceRegistration() {
 
             session.transformSecurelySessionToUserUUID(res, req).then(uuid => {
                 if (uuid != null) {
-                    device.checkDeviceRegistrationExists(registrationCode).then((result) => {
+                    deviceReg.checkDeviceRegistrationExists(registrationCode).then((result) => {
                         if (result) {
 
-                            device.updateRegisteredDevice(registrationCode, req.body.deviceName.toString(), uuid).then((newUUID) => {
+                            deviceReg.updateRegisteredDevice(registrationCode, req.body.deviceName.toString(), uuid).then((newUUID) => {
 
-                                device.storeUserDevices(newUUID, uuid).then(() => {
+                                deviceReg.storeUserDevices(newUUID, uuid).then(() => {
 
                                     res.status(200).json({uuid: newUUID});
 
