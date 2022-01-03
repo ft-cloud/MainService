@@ -11,6 +11,8 @@ import {droneLiveClients as liveDroneClients} from "../FrontendConnection/droneF
 const port = 8856;
 export const liveDevices = [];
 
+//TODO deprecated only there to support drone with sim800l
+
 function doQueue(socket) {
 
     if (socket.queue && socket.queue.length > 0) {
@@ -52,12 +54,17 @@ export function initTCPLiveConnection() {
             console.log(`Data received from client: ${chunk.toString()}`);
             chunk.toString().split("\n").forEach((message) => {
                 if(message.length>0) {
-                    if (checkIncomingMessage(message, socket)) {
-                      message = message.toString().slice(3, message.length);
 
-                        socket.queue.push(message);
+
+
+                        if (checkIncomingMessage(message, socket)) {
+                            message = message.toString().slice(3, message.length);
+
+                            socket.queue.push(message);
+                        }
                     }
-                }
+
+
 
 
             })

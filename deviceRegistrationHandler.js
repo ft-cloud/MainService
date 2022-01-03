@@ -140,7 +140,7 @@ export function initDeviceRegistration() {
 
                                     });
                                 }else{
-                                    res.status(400).json({
+                                    res.status(200).json({
                                         "error": "No Device is waiting for this registration!",
                                         "errorcode": "010"
                                     });
@@ -150,7 +150,7 @@ export function initDeviceRegistration() {
 
                         } else {
 
-                            res.status(400).json({
+                            res.status(200).json({
                                 "error": "Registration Code does not exist",
                                 "errorcode": "010"
                             });
