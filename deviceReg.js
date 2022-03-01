@@ -36,11 +36,14 @@ export const deviceReg = {
     updateRegisteredDevice(regCode, name, userUUID) {
         return new Promise(resolve => {
             const uuidGen = uuidV4();
+
+
             global.database.collection("deviceData").updateOne({regCode: regCode}, {
                 $set: {
                     uuid: uuidGen,
                     name: name,
-                    config: {},
+                    status: [],
+                    settings: [],
                     regUser: userUUID
                 }, $unset: {registrationTimeout: ""}
             }).then(() => {

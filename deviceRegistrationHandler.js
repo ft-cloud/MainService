@@ -56,7 +56,7 @@ export function initDeviceRegistration() {
 
                         ws.send(JSON.stringify({msg: "Device entry found. Waiting for registration"}));
 
-                        global.database.collection("deviceData").watch([], {fullDocument: "updateLookup"}).on("change", (changeEvent) => {
+                        global.database.collection("deviceData").watch([{regCode:registrationCode}], {fullDocument: "updateLookup"}).on("change", (changeEvent) => {
 
                             if (changeEvent.operationType === 'delete') {
                                 ws.send(JSON.stringify({msg: "Registration was canceled", error: true}));
